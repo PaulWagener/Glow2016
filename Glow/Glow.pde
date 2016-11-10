@@ -16,6 +16,9 @@ final int DEPTH_HEIGHT = 424;
 final int NUM_PIXELS = DEPTH_WIDTH * DEPTH_HEIGHT;
 
 OpenCV opencv;
+Mat flowGhosting;
+PShader shader;
+
 void setup() {
   //fullScreen(2);
   size(512, 424, P3D);
@@ -23,17 +26,20 @@ void setup() {
   depthDataInts = new Mat(DEPTH_HEIGHT, DEPTH_WIDTH, CvType.CV_32S);
   depthData = new Mat();
   depthDataInvalidMask = new Mat();
+  
+  shader = loadShader("fragment.glsl", "vertex.glsl");
+  shader.set("flow", loadImage("flow.png"));
 
   kinect2 = new Kinect2(this);
   kinect2.initDepth();
   kinect2.initDevice();
 }
 
-Mat flowGhosting;
+
 
 float angle;
 void draw() {
-  //*
+  /*
   background(0, 0, 0);
   
   // Update Kinect and process it to a small image
@@ -63,7 +69,7 @@ void draw() {
   }
   
   Core.addWeighted(flowGhosting, 1.0, flow, 0.5, 0.0, flowGhosting);
-  Core.multiply(flowGhosting, new Scalar(0.9, 0.9), flowGhosting);
+  Core.multiply(flowGhosting, new Scalar(0.97, 0.97), flowGhosting);
   
   ArrayList<Mat> channels = new ArrayList<Mat>();
   Core.split(flowGhosting, channels);
@@ -73,23 +79,33 @@ void draw() {
   showMat(xFlow);
  //*/
  
-  /*
-  background(0);
+  //*
+  background(0, 255, 0);
+  shader(shader);
+  //stroke(0, 255, 0);
+  noStroke();
+  strokeWeight(0.01);
   
-  camera(width/2, height/2, 300, width/2, height/2, 0, 0, 1, 0);
-  pointLight(200, 200, 200, width/2, height/2, -200);
-  
-  translate(width/2, height/2);
-  rotateY(angle);
-  
+  ortho();
+  scale(width, height);
+    
   beginShape(QUADS);
-  normal(0, 0, 1);
-  fill(50, 50, 200);
-  vertex(-100, +100);
-  vertex(+100, +100);
-  fill(200, 50, 50);
-  vertex(+100, -100);
-  vertex(-100, -100);
+  final int X_DIVISIONS = 30;
+  final int Y_DIVISIONS = 30;
+  final float X_STRIDE = 1.0/(float)X_DIVISIONS;
+  final float Y_STRIDE = 1.0/(float)Y_DIVISIONS;
+  //*
+  for(float x = 0; x < 1.0; x += X_STRIDE) {
+    for(float y = 0; y < 1.0; y += Y_STRIDE) {
+      final float S = 0.001;
+      vertex(x+S, y + Y_STRIDE);
+      vertex(x + X_STRIDE, y + Y_STRIDE);
+      vertex(x + X_STRIDE, y+S);
+      vertex(x+S, y+S);
+    }
+  }
+  //*/
+  
   endShape();  
   
   angle += 0.01;
