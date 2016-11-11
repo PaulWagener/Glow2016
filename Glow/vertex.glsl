@@ -10,6 +10,9 @@ void main() {
   flowPosition = (pos.xy + 1.0) / 2.0;
   flowPosition = vec2(flowPosition.x, 1 - flowPosition.y);
 
-  pos.xy += (texture2D(flow, flowPosition.st).xy - 0.5) / 2.0;
+  vec2 displacement = (texture2D(flow, flowPosition.st).xy - 0.5) / 2.0;
+  pos.xy += displacement;
+  pos.z = -length(displacement);
+
   gl_Position = pos;// + texture2D(flow, flowPosition.st);
 }

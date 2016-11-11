@@ -18,6 +18,7 @@ final int NUM_PIXELS = DEPTH_WIDTH * DEPTH_HEIGHT;
 OpenCV opencv;
 Mat flowGhosting;
 PShader shader;
+PGraphics main, test;
 
 void setup() {
   //fullScreen(2);
@@ -26,6 +27,8 @@ void setup() {
   depthDataInts = new Mat(DEPTH_HEIGHT, DEPTH_WIDTH, CvType.CV_32S);
   depthData = new Mat();
   depthDataInvalidMask = new Mat();
+  main = createGraphics(width, height, P3D);
+  test = createGraphics(100, 100, P3D);
   
   shader = loadShader("fragment.glsl", "vertex.glsl");
   shader.set("flow", loadImage("flow.png"));
@@ -35,9 +38,6 @@ void setup() {
   kinect2.initDevice();
 }
 
-
-
-float angle;
 void draw() {
   /*
   background(0, 0, 0);
@@ -80,36 +80,57 @@ void draw() {
  //*/
  
   //*
-  background(0, 255, 0);
-  shader(shader);
-  //stroke(0, 255, 0);
+  test.beginDraw();
+  {
+    test.background(128);
+    test.image(loadImage("rainbow.jpg"), 25, 25, 50, 50);
+  }
+  test.endDraw(); 
+  
+  
+  main.beginDraw();
+  {
+    pushMatrix();
+    background(0, 0, 0, 128);
+    
+    ortho();
+    scale(width, height);
+    fill(0, 0, 255);
+    shader(shader);
+      
+    beginShape(QUADS);
+    final int X_DIVISIONS = 30;
+    final int Y_DIVISIONS = 30;
+    final float X_STRIDE = 1.0/(float)X_DIVISIONS;
+    final float Y_STRIDE = 1.0/(float)Y_DIVISIONS;
+    
+    for(float x = 0; x < 1.0; x += X_STRIDE) {
+      for(float y = 0; y < 1.0; y += Y_STRIDE) {
+        final float S = 0.0;
+        vertex(x+S, y + Y_STRIDE);
+        vertex(x + X_STRIDE, y + Y_STRIDE);
+        vertex(x + X_STRIDE, y+S);
+        vertex(x+S, y+S);
+      }
+    }
+    endShape();
+    resetShader();
+    popMatrix();
+  }
+  main.endDraw();
+  
+  
+  //*/
+  background(0);
+  noFill();
   noStroke();
-  strokeWeight(0.01);
+  //shader.set("prevRender", main);
   
   ortho();
-  scale(width, height);
-    
-  beginShape(QUADS);
-  final int X_DIVISIONS = 30;
-  final int Y_DIVISIONS = 30;
-  final float X_STRIDE = 1.0/(float)X_DIVISIONS;
-  final float Y_STRIDE = 1.0/(float)Y_DIVISIONS;
-  //*
-  for(float x = 0; x < 1.0; x += X_STRIDE) {
-    for(float y = 0; y < 1.0; y += Y_STRIDE) {
-      final float S = 0.001;
-      vertex(x+S, y + Y_STRIDE);
-      vertex(x + X_STRIDE, y + Y_STRIDE);
-      vertex(x + X_STRIDE, y+S);
-      vertex(x+S, y+S);
-    }
-  }
-  //*/
+  image(main, 0, 0, width/2, height/2);
+  image(test, width/2, 0, width/2, height/2);
   
-  endShape();  
   
-  angle += 0.01;
-  //*/
 }
 
 /**
