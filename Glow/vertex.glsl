@@ -14,7 +14,8 @@ void main() {
   flowPosition = (pos.xy + 1.0) / 2.0;
   flowPosition = vec2(flowPosition.x, 1 - flowPosition.y);
 
-  vec2 displacement = (texture2D(flow, flowPosition.st).xy - 0.5) / 300.0;
+  vec2 displacement = (texture2D(flow, flowPosition.st).xy - 0.5) / 13.0;
+  displacement.y = -displacement.y;
   pos.xy += displacement;
   pos.z = -length(displacement);
   //*/
