@@ -1,5 +1,6 @@
 
 uniform sampler2D flow;
+uniform sampler2D rainbow;
 varying vec2 flowPosition;
 uniform sampler2D prevRender;
 
@@ -9,15 +10,23 @@ float rand(vec2 co){
 
 void main() {
 
-  gl_FragColor = vec4(flowPosition.x, flowPosition.y, 0.3, 1);//;
+  //gl_FragColor = vec4(flowPosition.x, flowPosition.y, 0.3, 1);//;
+
+  // Draw a distorted version of the previous render
+  vec2 renderPos = flowPosition.xy;
+  renderPos.y = 1 - renderPos.y;
+  gl_FragColor = texture2D(prevRender, renderPos) * 1;
 
 
+  //*
   // Draw a green warp grid accros
+
+  /*
   if(int(flowPosition.x * 300) % 10 == 0
   || int(flowPosition.y * 300) % 10 == 0) {
     gl_FragColor = vec4(0, 1, 0, 1);
   }
-
+  //*/
   //gl_FragColor += texture2D(flow, flowPosition.st);
   //vec4(1.0, 0.0, 0.0, 0.5);
 }
