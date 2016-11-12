@@ -1,12 +1,10 @@
-
-import org.openkinect.processing.*; //<>//
-import gab.opencv.*;
+import org.openkinect.processing.*;
+import gab.opencv.*; //<>//
 import org.opencv.core.*;
 import org.opencv.photo.*;
 import org.opencv.video.*;
 import org.opencv.imgproc.*;
 import java.nio.*;
-import g4p_controls.*;
 
 // Stuff to get the depth image
 Kinect2 kinect2;
@@ -14,16 +12,20 @@ Mat depthDataInts, depthData, previous, flowGhosting;
 Mat depthDataInvalidMask;
 
 // Kinect dimensions
-final int DEPTH_WIDTH = 512;
-final int DEPTH_HEIGHT = 424;
-final int NUM_PIXELS = DEPTH_WIDTH * DEPTH_HEIGHT;
+final int KINECT_DEPTH_WIDTH = 512;
+final int KINECT_DEPTH_HEIGHT = 424;
+final int KINECT_DEPTH_NUM_PIXELS = KINECT_DEPTH_WIDTH * KINECT_DEPTH_HEIGHT;
+
+// Dimensions of the flow processing
+final int FLOW_WIDTH = 250;
+final int FLOW_HEIGHT = 200;
 
 OpenCV opencv;
 PShader shader;
 PGraphics main;
 PImage border;
 
-boolean debug = false;
+boolean debug = true;
 boolean calibrateKinect = false;
 
 void settings() {
@@ -37,7 +39,7 @@ void settings() {
 
 void setup() {
   opencv = new OpenCV(this, 1, 1); // Used for initializing stuff
-  depthDataInts = new Mat(DEPTH_HEIGHT, DEPTH_WIDTH, CvType.CV_32S);
+  depthDataInts = new Mat(KINECT_DEPTH_HEIGHT, KINECT_DEPTH_WIDTH, CvType.CV_32S);
   depthData = new Mat();
   depthDataInvalidMask = new Mat();
   main = createGraphics(width, height, P3D);
@@ -66,13 +68,11 @@ void draw() {
   }
 
   // Downsample
-  Imgproc.resize(depthData, depthData, new Size(250, 200), 0, 0, Imgproc.INTER_NEAREST);
+  Imgproc.resize(depthData, depthData, new Size(FLOW_WIDTH, FLOW_HEIGHT), 0, 0, Imgproc.INTER_NEAREST);
 
   // Filter out noise
   Imgproc.threshold(depthData, depthDataInvalidMask, 0, 255, Imgproc.THRESH_BINARY_INV);
   depthData.setTo(new Scalar(230.0), depthDataInvalidMask);
-  // Photo.inpaint(depthData, depthDataInvalidMask, depthData, 3, Photo.INPAINT_TELEA);
-  // Imgproc.blur(depthData, depthData, new Size(15, 15));
   
   // Processed image
   if(debug) {
@@ -111,7 +111,7 @@ void draw() {
   {
     main.background(0);
     main.noStroke();
-    //*
+
     main.ortho();
     main.scale(width, height);
     main.shader(shader);
@@ -136,8 +136,6 @@ void draw() {
     main.resetShader();
     
     // Draw circles!
-    
-    main.strokeWeight(0.01);
     for(int i = 0; i < 150; i++) {
       main.fill(random(10, 250), random(10, 230), random(10, 250));
       float size = random(0, 0.02);
@@ -159,7 +157,6 @@ void draw() {
     }
     popMatrix();
   }
-  //*/
 }
 
 
@@ -186,12 +183,14 @@ PImage Mat2PImage(Mat m) {
   return image;
 }
 
+int[] intPixels = new int[FLOW_WIDTH * FLOW_HEIGHT];
+byte[] matPixels = new byte[FLOW_WIDTH * FLOW_HEIGHT * 4];
+  
 PImage FlowMat2PImage(Mat flow) {
   Mat ones = Mat.ones(flow.size(), CvType.CV_8U);
   Core.multiply(ones, new Scalar(255), ones);
   
   flow = flow.clone();
-  // Maybe multiply / divide here?
   Core.multiply(flow, new Scalar(10.0, 10.0), flow);
   Core.add(flow, new Scalar(128.0, 128.0), flow);
   flow.convertTo(flow, CvType.CV_8UC4);
@@ -199,7 +198,6 @@ PImage FlowMat2PImage(Mat flow) {
   ArrayList<Mat> flowChannels = new ArrayList<Mat>();
   Core.split(flow, flowChannels);
   
-  //
   ArrayList<Mat> channels = new ArrayList<Mat>();
   channels.add(ones); // B
   channels.add(flowChannels.get(1)); // G
@@ -211,8 +209,6 @@ PImage FlowMat2PImage(Mat flow) {
   
   PImage image = new PImage(m.cols(), m.rows(), ARGB);
   
-  int[] intPixels = new int[m.rows() * m.cols()];
-  byte[] matPixels = new byte[m.rows() * m.cols() * 4];
   m.get(0, 0, matPixels);
   ByteBuffer.wrap(matPixels).order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().get(intPixels);
   image.pixels = intPixels;
