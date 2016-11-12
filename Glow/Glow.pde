@@ -1,15 +1,12 @@
+boolean debug = false;
+boolean calibrateKinect = false; //<>//
+
 import org.openkinect.processing.*;
-import gab.opencv.*; //<>//
+import gab.opencv.*;
 import org.opencv.core.*;
-import org.opencv.photo.*;
 import org.opencv.video.*;
 import org.opencv.imgproc.*;
 import java.nio.*;
-
-// Stuff to get the depth image
-Kinect2 kinect2;
-Mat depthDataInts, depthData, previous, flowGhosting;
-Mat depthDataInvalidMask;
 
 // Kinect dimensions
 final int KINECT_DEPTH_WIDTH = 512;
@@ -20,13 +17,14 @@ final int KINECT_DEPTH_NUM_PIXELS = KINECT_DEPTH_WIDTH * KINECT_DEPTH_HEIGHT;
 final int FLOW_WIDTH = 250;
 final int FLOW_HEIGHT = 200;
 
+// Stuff to get the depth image
+Kinect2 kinect2;
+Mat depthDataInts, depthData, depthDataInvalidMask, previous, flowGhosting;
+
 OpenCV opencv;
 PShader shader;
 PGraphics main;
 PImage border;
-
-boolean debug = true;
-boolean calibrateKinect = false;
 
 void settings() {
   if(debug && !calibrateKinect) {
@@ -38,7 +36,7 @@ void settings() {
 
 
 void setup() {
-  opencv = new OpenCV(this, 1, 1); // Used for initializing stuff
+  opencv = new OpenCV(this, 1, 1); // Object only used for initializing stuff
   depthDataInts = new Mat(KINECT_DEPTH_HEIGHT, KINECT_DEPTH_WIDTH, CvType.CV_32S);
   depthData = new Mat();
   depthDataInvalidMask = new Mat();
@@ -136,7 +134,7 @@ void draw() {
     main.resetShader();
     
     // Draw circles!
-    for(int i = 0; i < 150; i++) {
+    for(int i = 0; i < 250; i++) {
       main.fill(random(10, 250), random(10, 230), random(10, 250));
       float size = random(0, 0.02);
       
