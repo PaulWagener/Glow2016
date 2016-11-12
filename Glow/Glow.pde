@@ -10,9 +10,8 @@ import g4p_controls.*;
 
 // Stuff to get the depth image
 Kinect2 kinect2;
-Mat depthDataInts, depthData;
+Mat depthDataInts, depthData, previous, flowGhosting;
 Mat depthDataInvalidMask;
-Mat previous;
 
 // Kinect dimensions
 final int DEPTH_WIDTH = 512;
@@ -20,16 +19,16 @@ final int DEPTH_HEIGHT = 424;
 final int NUM_PIXELS = DEPTH_WIDTH * DEPTH_HEIGHT;
 
 OpenCV opencv;
-Mat flowGhosting;
 PShader shader;
-PGraphics main, test;
+PGraphics main;
+PImage border;
 
 boolean debug = false;
 boolean calibrateKinect = false;
 
 void settings() {
   if(debug && !calibrateKinect) {
-    size(800, 600, P3D);
+    size(1024, 740, P3D);
   } else {
     fullScreen(P3D, 2);
   }
@@ -37,16 +36,15 @@ void settings() {
 
 
 void setup() {
-   
   opencv = new OpenCV(this, 1, 1); // Used for initializing stuff
   depthDataInts = new Mat(DEPTH_HEIGHT, DEPTH_WIDTH, CvType.CV_32S);
   depthData = new Mat();
   depthDataInvalidMask = new Mat();
   main = createGraphics(width, height, P3D);
-  test = createGraphics(100, 100, P3D);
   
   shader = loadShader("fragment.glsl", "vertex.glsl");
   shader.set("flow", loadImage("flow.png"));
+  border = loadImage("border.png");
   
   kinect2 = new Kinect2(this);
   kinect2.initDepth();
@@ -66,15 +64,15 @@ void draw() {
     image(Mat2PImage(depthData), 0, 0, width, height);
     return;
   }
-  //*
+
   // Downsample
   Imgproc.resize(depthData, depthData, new Size(250, 200), 0, 0, Imgproc.INTER_NEAREST);
 
   // Filter out noise
   Imgproc.threshold(depthData, depthDataInvalidMask, 0, 255, Imgproc.THRESH_BINARY_INV);
   depthData.setTo(new Scalar(230.0), depthDataInvalidMask);
-  //Photo.inpaint(depthData, depthDataInvalidMask, depthData, 3, Photo.INPAINT_TELEA);
-  //Imgproc.blur(depthData, depthData, new Size(15, 15));
+  // Photo.inpaint(depthData, depthDataInvalidMask, depthData, 3, Photo.INPAINT_TELEA);
+  // Imgproc.blur(depthData, depthData, new Size(15, 15));
   
   // Processed image
   if(debug) {
@@ -139,19 +137,27 @@ void draw() {
     
     // Draw circles!
     
-    
-    for(int i = 0; i < 100; i++) {
-      main.fill(random(10, 255), random(10, 255), random(10, 255));
-      float size = random(0, 0.03);
-      main.ellipse(random(0, 1), random(0,1), size, size);
+    main.strokeWeight(0.01);
+    for(int i = 0; i < 150; i++) {
+      main.fill(random(10, 250), random(10, 230), random(10, 250));
+      float size = random(0, 0.02);
+      
+      main.ellipse(random(0, 1), random(0,1), size*0.66, size);
     }
   }
   main.endDraw();
   
   if(debug) {
     image(main, width/2, height/2, width/2, height/2);
+    image(border, width/2, height/2, width/2, height/2);
   } else {
     image(main, 0, 0, width, height);
+    pushMatrix();
+    {
+      scale(-1, -1);
+      image(border, -width, -height, width, height);
+    }
+    popMatrix();
   }
   //*/
 }

@@ -15,7 +15,7 @@ void main() {
   // Draw a distorted version of the previous render
   vec2 renderPos = flowPosition.xy;
   renderPos.y = 1 - renderPos.y;
-  gl_FragColor = texture2D(prevRender, renderPos) * 1;
+  gl_FragColor = texture2D(prevRender, renderPos) * 0.997;
 
 
   //*
@@ -27,6 +27,4 @@ void main() {
     gl_FragColor = vec4(0, 1, 0, 1);
   }
   //*/
-  //gl_FragColor += texture2D(flow, flowPosition.st);
-  //vec4(1.0, 0.0, 0.0, 0.5);
 }
